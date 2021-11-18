@@ -13,3 +13,4 @@ public class SearchModel {
 
     private String searchQuery;
 }
+
