@@ -10,7 +10,7 @@ class YoutubeApiConfigurationTest {
     public YoutubeApiConfiguration ytubeApiConfig = new YoutubeApiConfiguration();;
 
     @Test
-    @DisplayName("Creating new API config")
+    @DisplayName("Creating new API config (setters test)")
     public void creatingNewApi()
     {
         ytubeApiConfig.setUrl("test_url;");
@@ -21,7 +21,7 @@ class YoutubeApiConfigurationTest {
     }
 
     @Test
-    @DisplayName("API config test")
+    @DisplayName("API config test (getters test)")
     void verifyConfigValues() {
         ytubeApiConfig.setUrl("test_url");
         ytubeApiConfig.setEndpoint("test_endpoint");

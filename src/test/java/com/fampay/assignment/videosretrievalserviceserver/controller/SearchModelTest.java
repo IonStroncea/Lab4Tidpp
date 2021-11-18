@@ -1,6 +1,7 @@
 package com.fampay.assignment.videosretrievalserviceserver.controller;
 
 import lombok.Getter;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -8,16 +9,11 @@ class SearchModelTest {
     SearchModel sm;
 
     @Test
-    @DisplayName("Creates new search model (test of parametrized constructor)")
+    @DisplayName("Creates new search model (parametrized constructor test)")
     public void createSearchModel()
     {
-        sm = new SearchModel("test_search-query");
-    }
+        sm = new SearchModel("test_search_query");
+        Assertions.assertEquals("test_search_query", sm.getSearchQuery());
 
-    @Test
-    @DisplayName("Displays search model value")
-    public String showSearchModel()
-    {
-        return sm.getSearchQuery();
     }
 }
