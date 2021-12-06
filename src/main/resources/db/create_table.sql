@@ -1,5 +1,6 @@
-DROP TABLE IF EXISTS video_details;
+IF NOT EXISTS video_details
 
+BEGIN
 CREATE TABLE video_details (
       id VARCHAR(250) NOT NULL PRIMARY KEY,
       title VARCHAR(250) NOT NULL,
@@ -12,4 +13,5 @@ CREATE TABLE video_details (
       INDEX IDX_search (title, description, channel)
 --       FULLTEXT KEY (title, description)
 )
+END
 -- ENGINE=MyISAM DEFAULT CHARSET=utf8;
