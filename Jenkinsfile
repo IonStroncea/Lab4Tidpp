@@ -71,10 +71,10 @@ pipeline {
                 echo "${DOCKER_CREDENTIAL_USR}"
                 echo "${DOCKER_CREDENTIAL_PSW}"
                 bat "docker build -t videos-service ."
-                bat "docker tag videos-service:latest pronike2000/videos-retrieval-service"
+                bat "docker tag videos-service:latest ionstroncea/lab4"
                 bat "docker login -u ${DOCKER_CREDENTIAL_USR} -p ${DOCKER_CREDENTIAL_PSW} docker.io"
-                bat "docker push pronike2000/videos-retrieval-service"
-                bat "docker rmi pronike2000/videos-retrieval-service"
+                bat "docker push ionstroncea/lab4"
+                bat "docker rmi ionstroncea/lab4"
             }
         }
 
@@ -83,7 +83,7 @@ pipeline {
             steps
             {
                 echo "SSH into VBox..."
-                bat "ssh -p 3022 nick@127.0.0.1 \"cd '/home/nick/TIDPP Lab 4' && docker-compose up -d\""
+                //bat "ssh -p 3022 nick@127.0.0.1 \"cd '/home/nick/TIDPP Lab 4' && docker-compose up -d\""
             }
         }
     } 
