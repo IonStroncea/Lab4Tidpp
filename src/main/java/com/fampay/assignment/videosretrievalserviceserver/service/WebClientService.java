@@ -34,7 +34,7 @@ public class WebClientService {
                         .queryParam("type", "video")
                         .queryParam("order", "date")
                         .queryParam("q", youtubeApiConfiguration.getSearchQuery())
-                        .queryParam("key", googleApiKey)
+                        .queryParam("key", "AIzaSyA-DCgVotefXQ9QVG3MvMsnJvKBzNkHi50")
                         .queryParam("maxResults", youtubeApiConfiguration.getPageSize())
                         .queryParamIfPresent("publishedAfter", publishedAfterDate)
                         .queryParamIfPresent("pageToken", pageToken)
