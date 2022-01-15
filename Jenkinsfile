@@ -32,7 +32,7 @@ pipeline {
             steps {
                 echo 'Building the application'
                 // Get some code from a GitHub repository
-                git 'https://github.com/elPresedinte/Laborator3TIDPP.git'
+                git 'https://github.com/elPresedinte/Lab4Tidpp.git'
 
             }
         }
@@ -83,7 +83,7 @@ pipeline {
             steps
             {
                 echo "SSH into VBox..."
-                //bat "ssh -p 3022 nick@127.0.0.1 \"cd '/home/nick/TIDPP Lab 4' && docker-compose up -d\""
+                bat "ssh -p 3022 ion@127.0.0.1 \"cd /home/ion/tidppLab4 && docker-compose up -d\""
             }
         }
     } 

@@ -1,4 +1,4 @@
-version: '0.1'
+
 
 services:
     spring_boot:
