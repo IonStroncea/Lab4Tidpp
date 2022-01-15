@@ -1,148 +1,133 @@
-pipeline 
-{
+pipeline {
     agent any
-
-    tools 
+    
+    environment
     {
-        maven "M3"
-        jdk "JDK10"
+        ON_SUCCESS_SEND_EMAIL=true
+        ON_FAILURE_SEND_EMAIL=true
+	GOOGLE_API_KEY = "AIzaSyA-DCgVotefXQ9QVG3MvMsnJvKBzNkHi50"
+        DOCKER_CREDENTIAL = credentials('dockerhub-login')
     }
     
     parameters
     {
-        booleanParam(name: 'CLEAN_WORKSPACE', defaultValue: true, description: 'To delete build folder')
+        booleanParam(name:'CLEAN_WORKSPACE',
+        defaultValue:true,
+        description:'Trebuie de sters mapa pentru buld-ul curent?'
+        )
+        booleanParam(name:'TESTING_FRONTEND',
+        defaultValue:false,
+        description:'Trebuie de testat frontend-ul?'
+        )
     }
     
-    environment
-    {
-        GOOGLE_API_KEY = "AIzaSyA-DCgVotefXQ9QVG3MvMsnJvKBzNkHi50"
-        ON_FAILURE_SEND_EMAIL = true
-        ON_SUCCESS_SEND_EMAIL = true
-        TESTING_FRONTEND = false
+    tools {
+        // Install the Maven version configured as "MAVEN11" and add it to the path.
+        maven "MAVEN11"
+        jdk "JAVA11"
     }
-    
-    stages 
-    {
-        stage('Build') 
-        {
-            steps 
-            {
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building the application'
                 // Get some code from a GitHub repository
-                git poll: false, url: 'https://github.com/ProNike2000/videos-retrieval-service'
+                git 'https://github.com/elPresedinte/Laborator3TIDPP.git'
 
-                // Run Maven on a Unix agent.
-                // "mvn -Dmaven.test.failure.ignore=true clean package"
-
-                // To run Maven on a Windows agent, use
-                // bat "mvn -Dmaven.test.failure.ignore=true clean package"
-                bat "mvn clean package"
-                // bat "mvn spring-boot:run"
             }
-
-            post 
-            {
+        }
+        stage('Test backend')
+        {
+            steps{
+                echo 'Testarea backend'
+                bat "mvn -Dmaven.test.failure.ignore=true clean package"
+            }  
+            post {
                 // If Maven was able to run the tests, even if some of the test
                 // failed, record the test results and archive the jar file.
-                success
-                {
-                    echo "Updates installed successful."
-                    //junit '**/target/surefire-reports/TEST-*.xml'
-                    junit skipPublishingChecks: true, testResults: '**/target/surefire-reports/TEST-*.xml'
-                    // archiveArtifacts 'target/*.jar'
-                    // cleanWs()
-                }
-                failure
-                {
-                    echo "Critical failure, you noob !!!"
+                success {
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                   // archiveArtifacts 'target1/*.jar'
                 }
             }
         }
-        
-        stage('Backend Test')
+        stage('Test front end')
+        {
+            when
+            {
+                expression
+                {
+                    params.TESTING_FRONTEND==true
+                }
+            }
+            steps{
+                echo "Testarea frontend ${params.TESTING_FRONTEND}"
+            }    
+        }
+	stage('Continuous Delivery')
         {
             steps
             {
-                echo "Backend test stage: execution."
-            }
-            post
-            {
-                success
-                {
-                    script
-                    {
-                        echo "Backend test stage: successful."
-                        TESTING_FRONTEND = true
-                        ON_FAILURE_SEND_EMAIL = false
-                    }
-                }
-                failure
-                {
-                    script
-                    {
-                        echo "Backend test stage: failed."
-                        TESTING_FRONTEND = false
-                        ON_SUCCESS_SEND_EMAIL = false
-                    }
-                }
+                echo "${DOCKER_CREDENTIAL_USR}"
+                echo "${DOCKER_CREDENTIAL_PSW}"
+                bat "docker build -t videos-service ."
+                bat "docker tag videos-service:latest pronike2000/videos-retrieval-service"
+                bat "docker login -u ${DOCKER_CREDENTIAL_USR} -p ${DOCKER_CREDENTIAL_PSW} docker.io"
+                bat "docker push pronike2000/videos-retrieval-service"
+                bat "docker rmi pronike2000/videos-retrieval-service"
             }
         }
-        
-        stage('Frontend Test')
+
+        stage('Continuous Deployment')
         {
             steps
             {
-                echo "Frontend test stage: ${TESTING_FRONTEND}"
+                echo "SSH into VBox..."
+                bat "ssh -p 3022 nick@127.0.0.1 \"cd '/home/nick/TIDPP Lab 4' && docker-compose up -d\""
             }
         }
+    } 
+        
     }
-    
     post
     {
-        always
+        always 
         {
-            echo "Pipeline execution has ended."
+            script
+            {
+                if(params.CLEAN_WORKSPACE==true)
+                {
+                    echo 'Stergerea mapei create'
+                    cleanWs()
+                }
+                
+            }
         }
-            
         success
         {
+
             script
             {
-                echo "Success !!!"
-                if (env.ON_SUCCESS_SEND_EMAIL)
+                if(env.ON_SUCCESS_SEND_EMAIL)
                 {
-                     emailext(body: "Job name: ${JOB_NAME}, build number: ${BUILD_NUMBER} - Successful! Build URL: ${BUILD_URL}", subject: 'Build success', to: 'nekit228patan@gmail.com')
+                    echo "Send email success job name: ${JOB_NAME}, build number: ${BUILD_NUMBER}, build url: ${BUILD_URL} "
+                    emailext ( body: "Success! job name: ${JOB_NAME}, build number: ${BUILD_NUMBER}, build url: ${BUILD_URL}", subject: 'Build', to: 'strion.ion@gmail.com')
+                    echo 'Email sent'
                 }
-                if (params.CLEAN_WORKSPACE == true)
-                {
-                    bat "if exist ${BUILD_TAG} rmdir ${BUILD_TAG} /q /s"
-                    echo "Folder /builds/${BUILD_TAG} has been deleted."
-                }
-                else
-                {
-                    echo "Folder /builds/${BUILD_TAG} doesn't exist."
-                }
-                cleanWs()
-                echo "Workspace has been cleaned."
             }
         }
-            
         failure
         {
+
             script
             {
-                echo "Your code sucks !!!"
-                if (env.ON_FAILURE_SEND_EMAIL)
+                if(env.ON_FAILURE_SEND_EMAIL)
                 {
-                     emailext(body: "Job name: ${JOB_NAME}, build number: ${BUILD_NUMBER} - Failure! Build URL: ${BUILD_URL}", subject: 'Build fail', to: 'nekit228patan@gmail.com')
+                    echo "Send email fail job name: ${JOB_NAME}, build number: ${BUILD_NUMBER}, build url: ${BUILD_URL} "
+                    emailext ( body: "Fail! job name: ${JOB_NAME}, build number: ${BUILD_NUMBER}, build url: ${BUILD_URL}", subject: 'Build', to: 'strion.ion@gmail.com')
+                    echo 'Email sent'
                 }
-                cleanWs()
-                echo "Workspace has been cleaned."
             }
-        }
-        
-        unstable
-        {
-            echo "Idk man, there's problems, but I kinda can't put my finger on it."
         }
     }
 }
